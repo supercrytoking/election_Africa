@@ -15,25 +15,26 @@ const {
 // Load User model
 const User = require("../../models/User");
 
-// @route POST api/users/register
+// @route POST api/auth/register
 // @desc Register user
 // @access Public
 router.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
+  console.log("registered user infomation=>", req.body);
   try {
     let user = await User.findOne({ email });
-    
+
     if (user) {
       return res.status(400).json({ email: "User already exists" });
     }
-    let state ='In-Active';    
+    let state = "In-Active";
     user = new User({
       name,
       email,
       password,
-      state
+      state,
     });
-    if(email === 'superadmin@playestates.com') user.state='Active';
+    if (email === "superadmin@playestates.com") user.state = "Active";
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(password, salt);
     await user.save();
@@ -46,7 +47,7 @@ router.post("/register", async (req, res) => {
     // };
 
     jwt.sign(
-      {id: user._id},
+      { id: user._id },
       config.secretOrKey,
       { expiresIn: 360000 },
       (err, token) => {
@@ -55,11 +56,11 @@ router.post("/register", async (req, res) => {
           success: true,
           accessToken: "Bearer " + token,
           user: {
-            _id:user._id,
-            name:user.name,
-            email:user.email,
-            state:user.state
-          }
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            state: user.state,
+          },
         });
       }
     );
@@ -75,6 +76,7 @@ router.post("/register", async (req, res) => {
 router.post("/login", validateLoginInput(), async (req, res) => {
   const { email, password } = req.body;
 
+  // console.log("login user data=>",  req.body);
   // Find user by email
   try {
     let user = await User.findOne({ email });
@@ -90,7 +92,7 @@ router.post("/login", validateLoginInput(), async (req, res) => {
     }
 
     jwt.sign(
-      {id: user._id},
+      { id: user._id },
       config.secretOrKey,
       { expiresIn: 360000 },
       (err, token) => {
@@ -102,8 +104,8 @@ router.post("/login", validateLoginInput(), async (req, res) => {
             _id: user._id,
             name: user.name,
             email: user.email,
-            state: user.state
-          }
+            state: user.state,
+          },
         });
       }
     );
@@ -125,7 +127,5 @@ router.get("/me", auth, async (req, res) => {
     res.status(500).send("Server Error");
   }
 });
-
-
 
 module.exports = router;
